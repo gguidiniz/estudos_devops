@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: services-config
+  namespace: pedidos-veloz
+data:
+  ESTOQUE_SERVICE_URL: "http://estoque-service:5003"
+  PAGAMENTOS_SERVICE_URL: "http://pagamentos-service:5002"
+  PEDIDOS_SERVICE_URL: "http://pedidos-service:5001"
+  FLASK_DEBUG: "false"
