@@ -1,0 +1,96 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  estoque-service:
+    build: ./estoque-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/estoque_db
+      PORT: "5003"
+      FLASK_DEBUG: "true"
+    ports:
+      - "5003:5003"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pagamentos-service:
+    build: ./pagamentos-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pagamentos_db
+      PORT: "5002"
+      FLASK_DEBUG: "true"
+    ports:
+      - "5002:5002"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pedidos-service:
+    build: ./pedidos-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pedidos_db
+      ESTOQUE_SERVICE_URL: http://estoque-service:5003
+      PAGAMENTOS_SERVICE_URL: http://pagamentos-service:5002
+      PORT: "5001"
+      FLASK_DEBUG: "true"
+    ports:
+      - "5001:5001"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      estoque-service:
+        condition: service_started
+      pagamentos-service:
+        condition: service_started
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      PEDIDOS_SERVICE_URL: http://pedidos-service:5001
+      PAGAMENTOS_SERVICE_URL: http://pagamentos-service:5002
+      ESTOQUE_SERVICE_URL: http://estoque-service:5003
+      PORT: "5000"
+      FLASK_DEBUG: "true"
+    ports:
+      - "5000:5000"
+    networks:
+      - backend
+    depends_on:
+      - pedidos-service
+      - pagamentos-service
+      - estoque-service
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+
+networks:
+  backend:
+    driver: bridge
