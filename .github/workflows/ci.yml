@@ -95,6 +95,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  # Deploy desativado neste projeto acadêmico por não haver cluster K8s real.
+  # Em produção, remover a condição 'vars.DEPLOY_ENABLED' e configurar o secret KUBECONFIG.
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
