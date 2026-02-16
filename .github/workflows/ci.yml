@@ -53,6 +53,8 @@ jobs:
           pip install -r ${{ matrix.service }}/requirements.txt
 
       - name: Run tests
+        env:
+          DATABASE_URL: sqlite:///test.db
         run: pytest ${{ matrix.service }}/test_app.py -v
 
   build-and-push:
