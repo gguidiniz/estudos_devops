@@ -96,7 +96,10 @@ def write_off_item(item_id):
 
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print(f"Erro ao criar tabelas: {e}", flush=True)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5003))
