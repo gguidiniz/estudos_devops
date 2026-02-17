@@ -18,4 +18,4 @@ USER appuser
 
 EXPOSE 5003
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5003", "--workers", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5003", "--workers", "2", "--preload", "app:app"]
