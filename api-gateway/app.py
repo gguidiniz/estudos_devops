@@ -18,10 +18,7 @@ def proxy_request(service_name, path):
 
     target_url = f"{service_url}/{path}"
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 8317125cffdaa5f5233923249fc9e13bd2c620a4
     # Headers to forward (creating a clean dict to avoid issues)
     forward_headers = {key: value for key, value in request.headers if key.lower() != "host"}
 
