@@ -18,12 +18,16 @@ def proxy_request(service_name, path):
 
     target_url = f"{service_url}/{path}"
 
+
+    # Headers to forward (creating a clean dict to avoid issues)
+    forward_headers = {key: value for key, value in request.headers if key.lower() != "host"}
+
     try:
         resp = http_client.request(
             method=request.method,
             url=target_url,
-            headers={k: v for k, v in request.headers if k.lower() != "host"},
-            json=request.get_json(silent=True),
+            headers=forward_headers,
+            data=request.get_data(),
             params=request.args,
             timeout=15,
         )
@@ -31,13 +35,12 @@ def proxy_request(service_name, path):
         return Response(
             response=resp.content,
             status=resp.status_code,
-            headers={"Content-Type": resp.headers.get("Content-Type", "application/json")},
+            headers=dict(resp.headers),
         )
 
-    except http_client.exceptions.ConnectionError:
-        return jsonify({"error": f"Serviço '{service_name}' indisponível"}), 503
-    except http_client.exceptions.Timeout:
-        return jsonify({"error": f"Timeout ao conectar com '{service_name}'"}), 504
+    except http_client.exceptions.RequestException as e:
+        print(f"Erro ao conectar com {service_name}: {e}", flush=True)
+        return jsonify({"error": f"Serviço '{service_name}' indisponível ou erro de conexão", "details": str(e)}), 503
 
 
 @app.route("/health", methods=["GET"])
